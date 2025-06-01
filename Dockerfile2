@@ -1,0 +1,39 @@
+# --- Build Stage ---
+FROM python:3.10-slim AS builder
+
+WORKDIR /build
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Download the model and tokenizer to the HuggingFace cache
+RUN python -c "from transformers import AutoModel, AutoTokenizer; AutoModel.from_pretrained('AI-team-UoA/GreekLegalRoBERTa_v3'); AutoTokenizer.from_pretrained('AI-team-UoA/GreekLegalRoBERTa_v3')"
+
+# --- Runtime Stage ---
+FROM python:3.10-slim
+
+WORKDIR /service
+
+# Copy installed Python packages from builder
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy HuggingFace cache (models/tokenizers) from builder
+COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface
+
+# Copy application code
+COPY ./app /service/app
+
+# Copy requirements.txt for reference (optional)
+COPY requirements.txt /service/requirements.txt
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
+ENV HOST=0.0.0.0
+
+EXPOSE ${PORT}
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
