@@ -1,0 +1,11 @@
+# Outputs
+areiospagos_decisions/
+areiospagos_
+*.html
+*.txt
+
+# Python
+__pycache__/
+*.pyc
+.env
+.venv

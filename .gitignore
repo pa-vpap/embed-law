@@ -1,0 +1,8 @@
+# Ignore scraped output folders at repo root
+areiospagos_20*/
+
+# Python and env
+__pycache__/
+*.pyc
+.env
+.venv
